@@ -101,7 +101,6 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
 
         # collect experience by acting in the environment with current policy
         while True:
-
             # rendering
             if render:
                 env.render()
@@ -120,12 +119,12 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
 
             if done or len(ep_rews) >= batch_size:
                 # if episode is over, record info about episode
-                ep_ret, ep_len = sum(ep_rews), len(ep_rews)
+                ep_ret, ep_len = ep_rews, len(ep_rews)
 
-                batch_rets.append(ep_ret)
-                batch_lens.append(ep_len)
-                batch_obs.extend(ep_obs[:-1])
-                batch_acts.extend(ep_acts[:-1])
+                batch_rets = ep_ret
+                batch_lens = ep_len
+                batch_obs = ep_obs[:-1]
+                batch_acts = ep_acts[:-1]           
 
                 #Calculate discounted rewards
                 batch_weights += list(discount_cumsum(ep_rews[:-1], gamma))
@@ -166,7 +165,7 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
     for i in range(epochs):
         batch_loss, batch_rets, batch_lens = train_one_epoch()
         print('epoch: %3d \t loss: %.3f \t return: %.3f \t ep_len: %.3f' %
-              (i, batch_loss, np.mean(batch_rets), np.mean(batch_lens)))
+              (i, batch_loss, np.sum(batch_rets), batch_lens))
 
 
 if __name__ == '__main__':
@@ -176,7 +175,7 @@ if __name__ == '__main__':
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--lr', type=float, default=3e-4)
     parser.add_argument('--vf_lr', type=float, default=1e-3)
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--epochs', type=int, default=150)
     parser.add_argument('--l', type=int, default=2)
     parser.add_argument('--hid', type=int, default=64)
     args = parser.parse_args()
