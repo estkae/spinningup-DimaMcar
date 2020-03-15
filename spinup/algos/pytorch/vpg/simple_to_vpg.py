@@ -49,7 +49,7 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
     def normalize(a):
         return (a - np.mean(a, axis=0)) / np.std(a, axis=0)
 
-    # make fuction to estimate values
+    # make function to estimate values
     def get_values(obs):
         values = values_net(obs)
         return torch.squeeze(values, -1)
@@ -113,7 +113,6 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
             obs, rew, done, _ = env.step(act)
 
             # save action, reward
-
             ep_acts.append(act)
             ep_rews.append(rew)
 
