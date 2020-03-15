@@ -118,7 +118,7 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
 
             if done or len(ep_rews) >= batch_size:
                 # if episode is over, record info about episode
-                ep_ret, ep_len = ep_rews, len(ep_rews)
+                ep_ret, ep_len = sum(ep_rews), len(ep_rews)
 
                 batch_rets = ep_ret
                 batch_lens = ep_len
@@ -132,9 +132,6 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
                 vals = get_values(torch.as_tensor(ep_obs, dtype=torch.float32))
                 deltas = torch.tensor(ep_rews[:-1]) + gamma * vals[1:] - vals[:-1]
                 batch_adv += list(discount_cumsum(deltas.detach().numpy(), gamma * lam))
-
-                # reset episode-specific variables
-                obs, done, ep_rews, ep_obs, ep_acts = env.reset(), False, [], [], []
 
                 # end experience loop if we have enough of it
                 break
@@ -164,7 +161,7 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
     for i in range(epochs):
         batch_loss, batch_rets, batch_lens = train_one_epoch()
         print('epoch: %3d \t loss: %.3f \t return: %.3f \t ep_len: %.3f' %
-              (i, batch_loss, np.sum(batch_rets), batch_lens))
+              (i, batch_loss, batch_rets, batch_lens))
 
 
 if __name__ == '__main__':
