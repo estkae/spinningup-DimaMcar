@@ -20,7 +20,7 @@ def mlp(sizes, activation=nn.Tanh, output_activation=nn.Identity):
 
 
 def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
-          epochs=150, batch_size=500, render=False, vf_lr=1e-3,
+          epochs=150, batch_size=4000, render=False, vf_lr=1e-3,
          gamma=0.99, lam=0.97, train_v_iters=80):
     # make environment, check spaces, get obs / act dims
     env = gym.make(env_name)
@@ -98,19 +98,17 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
         ep_obs = []  # list of episode observations
         ep_acts = []  # list of episode acts
 
-        # render first episode of each epoch
-        finished_rendering_this_epoch = False
 
         # collect experience by acting in the environment with current policy
         while True:
 
             # rendering
-            if (not finished_rendering_this_epoch) and render:
+            if render:
                 env.render()
 
             # save obs
-            #             batch_obs.append(obs.copy())
             ep_obs.append(obs.copy())
+
             # act in the environment
             act = get_action(torch.as_tensor(obs, dtype=torch.float32))
             obs, rew, done, _ = env.step(act)
@@ -120,7 +118,7 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
             ep_acts.append(act)
             ep_rews.append(rew)
 
-            if done:
+            if done or len(ep_rews) >= batch_size:
                 # if episode is over, record info about episode
                 ep_ret, ep_len = sum(ep_rews), len(ep_rews)
 
@@ -140,12 +138,8 @@ def train(env_name='Acrobot-v1', hidden_sizes=[64]*2, lr=3e-4,
                 # reset episode-specific variables
                 obs, done, ep_rews, ep_obs, ep_acts = env.reset(), False, [], [], []
 
-                # won't render again this epoch
-                finished_rendering_this_epoch = True
-
                 # end experience loop if we have enough of it
-                if len(batch_obs) > batch_size:
-                    break
+                break
 
         # take a single policy gradient update step
         batch_adv = normalize(batch_adv)
